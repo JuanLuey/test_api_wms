@@ -1,6 +1,6 @@
 # test_api_wms
 
-# properties
+# application.properties
 api.url=XXXX
 api.username=XXXX
 api.password=XXX
