@@ -1,6 +1,7 @@
 package pe.spsa.apiwms.repository;
 
 import java.io.IOException;
+import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +63,7 @@ public class RepoApi {
                         logger.info(" Response getResult_count: {}", resultHeader.getResult_count());
 
                         getDetail(resultHeader, org);
+
                 } else if (responsehead == 404) {
                         logger.info("No data found header");
                 } else {
@@ -77,7 +79,7 @@ public class RepoApi {
 
                 int ib_shipment_id = resultHeader.getResults().get(0).getId();
                 logger.info(" ib_shipment_id:  {}", ib_shipment_id);
-                
+
                 ResultDtlSet resultURLDet = resultHeader.getResults().get(0).getIb_shipment_dtl_set();
 
                 ObjectMapper objectMapper = new ObjectMapper();
@@ -94,27 +96,56 @@ public class RepoApi {
 
                 String response_string = response.body().string();
 
-                logger.info(" Response Code Details:  {}", response.code());
+                int responseDet = response.code();
 
-                ResultDetail resultDetail = objectMapper.readValue(response_string, ResultDetail.class);
+                logger.info(" Response Code Details:  {}", responseDet);
 
-                int number_detail = resultDetail.getResult_count();
+                if (responseDet == 401) {
+                        logger.info("Nothing data found");
+                } else if (responseDet != 200) {
+                        logger.info("others...");
+                }
 
-                logger.info(" Response Detail getResult_count: {}", number_detail);
+                if (responseDet == 200) {
+                        ResultDetail resultDetail = objectMapper.readValue(response_string, ResultDetail.class);
 
-                for (int i = 0; i < number_detail; i++) {
-                        logger.info(" Response Detail getContainer_nbr: {}",
-                                        resultDetail.getResults().get(i).getContainer_nbr() +
-                                                        " getid: " + resultDetail.getResults().get(i).getId() +
-                                                        " getPallet_nbr: "
-                                                        + resultDetail.getResults().get(i).getPallet_nbr() +
-                                                        " getShipped_qty: "
-                                                        + resultDetail.getResults().get(i).getShipped_qty());
+                        int number_detail = resultDetail.getResult_count();
 
-                        ResultItem resultItem = resultDetail.getResults().get(i).getItem_id();
+                        logger.info(" Response Detail getResult_count: {}", number_detail);
 
-                        getProduct(resultItem);
+                        // for (int i = 0; i < number_detail; i++) {
+                        // logger.info(" Response Detail getContainer_nbr: {}",
+                        // resultDetail.getResults().get(i).getContainer_nbr() +
+                        // " getid: " + resultDetail.getResults().get(i).getId() +
+                        // " getPallet_nbr: "
+                        // + resultDetail.getResults().get(i).getPallet_nbr() +
+                        // " getShipped_qty: "
+                        // + resultDetail.getResults().get(i).getShipped_qty());
 
+                        // ResultItem resultItem = resultDetail.getResults().get(i).getItem_id();
+
+                        // getProduct(resultItem);
+
+                        // }
+
+                        IntStream.range(0, number_detail)
+                                        .parallel()
+                                        .forEach(i -> {
+                                                try {
+                                                        Thread.sleep(10);
+                                                        ResultItem resultItem = null;
+                                                        resultItem = resultDetail.getResults().get(i).getItem_id();
+                                                        getProduct(resultItem);
+                                                        logger.info(" Response Detail getId: {}",
+                                                                        resultDetail.getResults().get(i).getId());
+                                                } catch (InterruptedException e) {
+                                                        e.printStackTrace();
+                                                } catch (IOException e) {
+                                                        e.printStackTrace();
+                                                }
+                                        });
+
+                        logger.info("fin parallel detail ...");
                 }
 
         }
