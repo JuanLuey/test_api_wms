@@ -9,4 +9,5 @@ public class ResultHeadArray {
     private ResultCompany company_id;
     private ResultShpType shipment_type_id;
     private ResultOrigin origin_facility_id;
+    private ResultLoadId load_id;
 }
